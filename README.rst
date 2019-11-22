@@ -34,3 +34,10 @@ The translation table is as follows:
 
 The exceptions for this translation are possessive pronouns that originaly
 were marked as ``PROADJ`` here are marked as ``PRON|PronType=prs|Poss=Yes``.
+
+If you want to generate the udmopho translation by yourself, in the root dir
+of this project execute:
+
+.. code-block:: sh
+
+   $ ./mac2ud
