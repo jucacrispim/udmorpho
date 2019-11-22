@@ -1,0 +1,74 @@
+#!/bin/bash
+
+V2_URL="http://www.nilc.icmc.usp.br/macmorpho/macmorpho-v2.tgz"
+V3_URL="http://www.nilc.icmc.usp.br/macmorpho/macmorpho-v3.tgz"
+
+download(){
+    version=$1
+    echo "Downloading macmorpho $version"
+    mkdir -p tmp/$version
+    curl --progress-bar -o "tmp/macmorpho-$version.tgz" $V2_URL
+    cd tmp
+    tar -xf "macmorpho-$version.tgz"
+    cat *.txt > $version/macmorpho-all.txt
+    rm macmorpho-$version.tgz
+    rm -f *.txt
+    cd ..
+    echo ""
+
+}
+
+progress_indicator(){
+    tput civis
+    spinner="/|\\-/|\\-"
+    while :
+    do
+	echo -n "."
+	sleep 0.12
+    done
+}
+
+
+[ ! -d tmp/v2 ] && download v2
+[ ! -d tmp/v3 ] && download v3
+
+echo "Settings VAUX in macmorpho v3"
+progress_indicator &
+INDICATOR_PID=$!
+
+./backvaux  | ./mergevaux > tmp/vaux.out
+kill -9 $INDICATOR_PID
+wait $INDICATOR_PID 1&> /dev/null
+
+echo ""
+echo ""
+echo "Translating macmorpho POS tags to universal dependencies POS tags"
+
+progress_indicator &
+INDICATOR_PID=$!
+
+./translate tmp/vaux.out > tmp/translate.out
+kill -9 $INDICATOR_PID
+wait $INDICATOR_PID 1&> /dev/null
+
+echo ""
+echo ""
+echo "Shuffling and splitting in dev, test and train"
+progress_indicator &
+INDICATOR_PID=$!
+trap "kill -9 $INDICATOR_PID" `seq 0 15`
+shuf tmp/translate.out > tmp/udmorpho-all.txt
+lines=`cat tmp/udmorpho-all.txt | wc -l`
+dev=`echo "($lines * 0.04)" | bc |  python -c "print(round(float(input())))"`
+test=`echo "($lines * 0.2)" | bc |  python -c "print(round(float(input())))"`
+test_start=`echo "($dev + 1)" | bc`
+test_end=`echo "($test_start + $test)" | bc`
+train_start=`echo "($test_end + 1)" | bc`
+sed -n "1,$dev p" tmp/udmorpho-all.txt > udmorpho-dev.txt
+sed -n "$test_start,$test_end p" tmp/udmorpho-all.txt > udmorpho-test.txt
+sed -n "$train_start,$ p" tmp/udmorpho-all.txt > udmorpho-train.txt
+
+echo ""
+echo ""
+echo "Done!"
+tput cnorm

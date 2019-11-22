@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import fileinput
+import re
+
+vaux_block = False
+v2sent = None
+
+for line in fileinput.input():
+
+    if line.startswith('===='):
+        vaux_block = not vaux_block
+
+    elif v2sent:
+        vaux = [w for w in v2sent.split() if w.endswith('_VAUX')]
+        verb = [re.compile(w.replace('_VAUX', '_V') + r'($|\s)') for w in vaux]
+
+        for i, v in enumerate(verb):
+            line = v.sub(vaux[i] + ' ', line)
+        print(line.strip())
+        v2sent = None
+
+    elif vaux_block:
+        v2sent = line
+
+    elif line.strip():
+        print(line.strip())

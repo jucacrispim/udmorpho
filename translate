@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import fileinput
+import re
+
+
+trans_table = {
+    re.compile(r'_ART(\s|$)'): '_DET|PronType=Art',
+    re.compile(r'_PREP\+PRO-KS-REL(\s|$)'): '_ADP',
+    re.compile(r'_ADJ(\s|$)'): '_ADJ',
+    re.compile(r'_N(\s|$)'): '_NOUN',
+    re.compile(r'_NPROP(\s|$)'): '_PROPN',
+    re.compile(r'_NUM(\s|$)'): '_NUM',
+    re.compile(r'_PROADJ(\s|$)'): '_DET|PronType=prs',
+    re.compile(r'_PROADJ\|\+(\s|$)'): '_DET|PronType=prs',
+    re.compile(r'_PROSUB(\s|$)'): '_PRON',
+    re.compile(r'_PROPESS(\s|$)'): '_PRON|PronType=prs',
+    re.compile(r'_PRO-KS(\s|$)'): '_PRON',
+    re.compile(r'_ADV(\s|$)'): '_ADV',
+    re.compile(r'_PREP\+PROADJ(\s|$)'): '_PRON',
+    re.compile(r'_ADV-KS(\s|$)'): '_ADV',
+    re.compile(r'_ADV-KS-REL(\s|$)'): '_ADV',
+    re.compile(r'_KC(\s|$)'): '_CCONJ',
+    re.compile(r'_KS(\s|$)'): '_SCONJ',
+    re.compile(r'_PREP\+ART(\s|$)'): '_ADP',
+    re.compile(r'_PREP\|\+(\s|$)'): '_ADP',
+    re.compile(r'_PREP(\s|$)'): '_ADP',
+    re.compile(r'_IN(\s|$)'): '_INTJ',
+    re.compile(r'_PCP(\s|$)'): '_VERB|VerbForm=Part',
+    re.compile(r'_PDEN(\s|$)'): '_ADV',
+    re.compile(r'_VAUX(\s|$)'): '_AUX',
+    re.compile(r'_VAUX\|\+(\s|$)'): '_AUX',
+    re.compile(r'_VAUX\|!(\s|$)'): '_AUX',
+    re.compile(r'_V(\s|$)'): '_VERB',
+    re.compile(r'_CUR(\s|$)'): '_SYM',
+    re.compile(r'_PU(\s|$)'): '_PUNCT',
+    re.compile(r'_ADV\|\+(\s|$)'): '_ADV',
+    re.compile(r'_N\|DAT(\s|$)'): '_X',
+    re.compile(r'_N\|HOR(\s|$)'): '_X',
+    re.compile(r'_N\|TEL(\s|$)'): '_X',
+    re.compile(r'_V\|\+(\s|$)'): '_VERB',
+    re.compile(r'_N\|DAD(\s|$)'): '_X',
+    re.compile(r'_KC\|\[(\s|$)'): '_CCONJ',
+    re.compile(r'_KC\|\](\s|$)'): '_CCONJ',
+    re.compile(r'_NPROP\|\+(\s|$)'): '_PROPN',
+    re.compile(r'_ADV\|\[(\s|$)'): '_ADV',
+    re.compile(r'_ADV\|\](\s|$)'): '_ADV',
+    re.compile(r'_NUM\|TEL(\s|$)'): '_X',
+    re.compile(r'_ADJ\|\+(\s|$)'): '_ADJ',
+    re.compile(r'_PREP\|\[(\s|$)'): '_ADP',
+    re.compile(r'_PREP\|\](\s|$)'): '_ADP',
+    re.compile(r'_PROPESS\|\+(\s|$)'): '_PRON|PronType=prs',
+    re.compile(r'_KC\|\+(\s|$)'): '_CCONJ',
+    re.compile(r'_PREP\|\+\](\s|$)'): '_ADP',
+    re.compile(r'_NPRO(\s|$)'): '_PROPN',
+    re.compile(r'_PREP\|(\s|$)'): '_ADP',
+    re.compile(r'_KS\|\[(\s|$)'): '_SCONJ',
+    re.compile(r'_KS\|\](\s|$)'): '_SCONJ',
+    re.compile(r'_PROP(\s|$)'): '_PROPN',
+    re.compile(r'_ART\|\+(\s|$)'): '_DET|PronType=Art',
+    re.compile(r'_ADV\|HOR(\s|$)'): '_X',
+    re.compile(r'_IN\|EST(\s|$)'): '_INTJ|Foreign=Yes',
+    re.compile(r'_V\|EST(\s|$)'): '_VERB|Foreign=Yes',
+    re.compile(r'_PREP\|EST(\s|$)'): '_ADP|Foreign=Yes',
+    re.compile(r'_KC\|EST(\s|$)'): '_CCONJ|Foreign=Yes',
+    re.compile(r'_V\|!(\s|$)'): '_VERB',
+    re.compile(r'_ART\|EST(\s|$)'): '_DET|Foreign=Yes',
+    re.compile(r'_PROPESS\|EST(\s|$)'): '_PRON|Foreign=Yes',
+    re.compile(r'_PDEN\|EST(\s|$)'): '_ADV|Foreign=Yes',
+    re.compile(r'_N\|EST(\s|$)'): '_NOUN|Foreign=Yes',
+}
+
+words = {
+    'meu_PROADJ': 'meu_PRON|PronType=prs|Poss=Yes',
+    'meus_PROADJ': 'meus_PRON|PronType=prs|Poss=Yes',
+    'minha_PROADJ': 'minha_PRON|PronType=prs|Poss=Yes',
+    'minhas_PROADJ': 'minhas_PRON|PronType=prs|Poss=Yes',
+    'teu_PROADJ': 'teu_PRON|PronType=prs|Poss=Yes',
+    'teus_PROADJ': 'teus_PRON|PronType=prs|Poss=Yes',
+    'tua_PROADJ': 'tua_PRON|PronType=prs|Poss=Yes',
+    'tuas_PROADJ': 'tuas_PRON|PronType=prs|Poss=Yes',
+    'seu_PROADJ': 'seu_PRON|PronType=prs|Poss=Yes',
+    'seus_PROADJ': 'seus_PRON|PronType=prs|Poss=Yes',
+    'sua_PROADJ': 'sua_PRON|PronType=prs|Poss=Yes',
+    'suas_PROADJ': 'suas_PRON|PronType=prs|Poss=Yes',
+    'nosso_PROADJ': 'nosso_PRON|PronType=prs|Poss=Yes',
+    'nossos_PROADJ': 'nossos_PRON|PronType=prs|Poss=Yes',
+    'nossa_PROADJ': 'nossa_PRON|PronType=prs|Poss=Yes',
+    'nossas_PROADJ': 'nossas_PRON|PronType=prs|Poss=Yes',
+    'vosso_PROADJ': 'vosso_PRON|PronType=prs|Poss=Yes',
+    'vossos_PROADJ': 'vossos_PRON|PronType=prs|Poss=Yes',
+    'vossa_PROADJ': 'vossa_PRON|PronType=prs|Poss=Yes',
+    'vossas_PROADJ': 'vossas_PRON|PronType=prs|Poss=Yes',
+}
+
+words.update({k.capitalize(): v.capitalize() for k, v in words.items()})
+words.update({k.upper(): v.upper() for k, v in words.items()})
+
+
+for line in fileinput.input():
+    for k, v in words.items():
+        line = line.replace(k, v)
+
+    for pat, v in trans_table.items():
+        line = pat.sub(v + ' ', line)
+
+    print(line.strip())
