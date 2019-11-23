@@ -20,7 +20,6 @@ download(){
 
 progress_indicator(){
     tput civis
-    spinner="/|\\-/|\\-"
     while :
     do
 	echo -n "."
@@ -32,7 +31,7 @@ progress_indicator(){
 [ ! -d tmp/v2 ] && download v2
 [ ! -d tmp/v3 ] && download v3
 
-echo "Settings VAUX in macmorpho v3"
+echo "Setting VAUX in macmorpho v3"
 progress_indicator &
 INDICATOR_PID=$!
 
