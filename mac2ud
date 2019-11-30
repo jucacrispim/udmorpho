@@ -7,7 +7,7 @@ download(){
     version=$1
     echo "Downloading macmorpho $version"
     mkdir -p tmp/$version
-    curl --progress-bar -o "tmp/macmorpho-$version.tgz" $V2_URL
+    curl --progress-bar -o "tmp/macmorpho-$version.tgz" "http://www.nilc.icmc.usp.br/macmorpho/macmorpho-$version.tgz"
     cd tmp
     tar -xf "macmorpho-$version.tgz"
     cat *.txt > $version/macmorpho-all.txt
@@ -56,6 +56,7 @@ echo "Shuffling and splitting in dev, test and train"
 progress_indicator &
 INDICATOR_PID=$!
 trap "kill -9 $INDICATOR_PID" `seq 0 15`
+
 shuf tmp/translate.out > tmp/udmorpho-all.txt
 lines=`cat tmp/udmorpho-all.txt | wc -l`
 dev=`echo "($lines * 0.04)" | bc |  python -c "print(round(float(input())))"`
