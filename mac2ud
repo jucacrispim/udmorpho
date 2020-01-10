@@ -1,8 +1,5 @@
 #!/bin/bash
 
-V2_URL="http://www.nilc.icmc.usp.br/macmorpho/macmorpho-v2.tgz"
-V3_URL="http://www.nilc.icmc.usp.br/macmorpho/macmorpho-v3.tgz"
-
 download(){
     version=$1
     echo "Downloading macmorpho $version"
